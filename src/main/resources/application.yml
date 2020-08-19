@@ -1,0 +1,50 @@
+spring:
+#  devtools:
+#    restart:
+#      enabled: true  #设置开启热部署
+  datasource:
+    primary:
+      driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      jdbc-url: jdbc:sqlserver://106.14.191.77:7933;Databasename=QADB
+      username: demo
+      password: welcome1!
+    secondary:
+       driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+       jdbc-url: jdbc:sqlserver://106.14.191.77:7933;Databasename=zenoDB
+       username: demo
+       password: welcome1!
+#    thirdary:
+#      driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+#      jdbc-url: jdbc:sqlserver://106.14.191.77:7933;Databasename=MickyDB
+#      username: demo
+#      password: welcome1!
+  jpa:
+    database: sql_server
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy:  org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    database-platform: org.hibernate.dialect.SQLServer2008Dialect
+  thymeleaf:
+    mode: HTML5
+    encoding: UTF-8
+    servlet:
+      content-type: text/html
+    cache: false
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 200MB
+#  freemarker:
+#    cache: false    #页面不加载缓存，修改即时生效
+server:
+#  port: 7457
+  port: 9003
+file:
+#  filepath: /usr/local/RunJar/media/
+#  downLoadPath: /usr/local/RunJar/download/
+  filepath: D:/javaweb/media/
+  downLoadPath: D:/javaweb/download/
+  wordListen: D:\websites\MickyMaterial\files\json\WordListen
+  levelScript: D:\websites\MickyMaterial\files\scriptid
