@@ -52,7 +52,9 @@ public interface IssueRepository extends JpaRepository<Issue, Integer>, JpaSpeci
     @Query(value = "SELECT word,variations FROM  DictionaryDB.dbo.tWords WHERE word_id = ?1", nativeQuery = true)
     Map<String,String> getWordAndVariations(@Param("wordId") String wordId);
 
-    @Query(value = "select c.packageid, isnull(c.title_chinese, '') title_chinese,  isnull(c.title_english, '') title_english,  b.mediaid, a.scriptid, b.subpackageid, \n" +
+    @Query(value = "declare @alist varchar(Max)\n" +
+            "set @alist = (select ''''+replace(listenlevel123, ' ',''',''')+'''' from DictionaryDB.dbo.tWordSimilarSoundandLook where word=?1)" +
+            "select c.packageid, isnull(c.title_chinese, '') title_chinese,  isnull(c.title_english, '') title_english,  b.mediaid, a.scriptid, b.subpackageid, \n" +
             "                                    isnull(b.subtitle_chinese, '') subtitle_chinese, isnull(b.subtitle_english, '') subtitle_english, len(a.script_eng) cnt, a.script_eng, a.script_chn, a.blistening  from CivilizationDB.dbo.tblmediascripts a\n" +
             "                                    join CivilizationDB.dbo.tblmedias b on a.mediaid=b.mediaid\n" +
             "                                    join CivilizationDB.dbo.tblPackage c on c.packageid=b.packageid and c.status>0\n" +
@@ -62,6 +64,7 @@ public interface IssueRepository extends JpaRepository<Issue, Integer>, JpaSpeci
             "                                    and d.subjectid=200\n" +
             "                                    and a.script_eng like '% %'\n" +
             "                                    and  contains (a.script_eng, ?2  ) \n" +
+            "and cast( a.scriptid as nvarchar(10)) not in (@alist)"+
             "                                    and a.scriptid not in (select script_id from QADB.dbo.listen where word_name=?1 )    \n" +
             "                                    order by cnt, a.script_eng", nativeQuery = true)
     List<Map<String,Object>> getScriptListByWordAndVariations(String word,String wordAndVariations);
