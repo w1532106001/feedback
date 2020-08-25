@@ -173,4 +173,10 @@ public interface IndexService {
      * @return
      */
     ServerResponse updateWordIdAndWordName();
+
+    /**
+     * 获取每天听力数量
+     * @return
+     */
+    ServerResponse getDailyListenCount(String time);
 }

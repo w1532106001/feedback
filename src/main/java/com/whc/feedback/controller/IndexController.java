@@ -7,6 +7,7 @@ import com.whc.feedback.dao.issue.entity.Issue;
 import com.whc.feedback.service.IndexService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,9 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * @Author: WHC
@@ -330,5 +329,12 @@ public class IndexController {
 //    public ServerResponse updateWordIdAndWordName(){
 //        return indexService.updateWordIdAndWordName();
 //    }
+
+    @GetMapping("index/getDailyListenCount/{time}")
+    public ServerResponse getDailyListenCount(@PathVariable("time") String time){
+        return indexService.getDailyListenCount(time);
+    }
+
+
 
 }

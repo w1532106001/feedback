@@ -414,240 +414,278 @@ public class IndexServiceImpl implements IndexService {
 
     @Override
     public ServerResponse getListenScriptByWordId(String wordId) {
-        File wordListenFile = new File(wordListen);
-        File levelScriptFile = new File(levelScript);
+
+        Map wordAndVariations = issueRepository.getWordAndVariations(wordId);
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("'''");
+        stringBuilder.append(wordAndVariations.get("word"));
+        stringBuilder.append("''");
+        String[] variations = wordAndVariations.get("variations").toString().split(" ");
+        for (String variation : variations) {
+            stringBuilder.append(" or ''").append(variation).append("''");
+        }
+        List<Map<String, Object>> objects = issueRepository.getScriptListByWordAndVariations(wordAndVariations.get("word").toString(), stringBuilder.toString());
+        System.out.println(objects);
+        System.out.println(stringBuilder);
+        List<ScriptInfo> scriptInfoList = JSONObject.parseArray(JSONObject.toJSONString(objects), ScriptInfo.class);
         List<Listen> listenList = listenRepository.findByWordId(Integer.valueOf(wordId));
-        if (wordListenFile.exists() && levelScriptFile.exists()) {
-            for (File file : wordListenFile.listFiles()) {
-                String name = file.getName().replace(".json", "");
-                if (StringUtils.equals(name, wordId)) {
-                    StringBuilder result = new StringBuilder();
-                    BufferedReader br = null;//构造一个BufferedReader类来读取文件
-                    try {
-                        br = new BufferedReader(new InputStreamReader(new FileInputStream(file), encoding));
-                        String s = null;
-                        while ((s = br.readLine()) != null) {//使用readLine方法，一次读一行
-                            result.append(System.lineSeparator() + s);
-                        }
-                        br.close();
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    JSONObject wordListenJSON = JSONObject.parseObject(result.toString());
-                    WordScriptInfo wordScriptInfo = new WordScriptInfo();
-                    wordScriptInfo.setWord(wordListenJSON.getString("word"));
-                    wordScriptInfo.setWordid(wordListenJSON.getInteger("wordid"));
-                    wordScriptInfo.setSimilarsoundwords1(wordListenJSON.getString("similarsoundwords1"));
-                    wordScriptInfo.setSimilarsoundwords1id(wordListenJSON.getString("similarsoundwords1id"));
-                    wordScriptInfo.setSimilarsoundwords2(wordListenJSON.getString("similarsoundwords2"));
-                    wordScriptInfo.setSimilarsoundwords2id(wordListenJSON.getString("similarsoundwords2id"));
-                    wordScriptInfo.setSimilarlookwords1(wordListenJSON.getString("similarlookwords1"));
-                    wordScriptInfo.setSimilarlookwords1id(wordListenJSON.getString("similarlookwords1id"));
-                    wordScriptInfo.setSimilarlookwords2(wordListenJSON.getString("similarlookwords2"));
-                    wordScriptInfo.setSimilarlookwords2id(wordListenJSON.getString("similarlookwords2id"));
-                    JSONObject level = wordListenJSON.getJSONObject("level");
-                    String level1Text = level.getString("1");
-                    String level2Text = level.getString("2");
-                    String level3Text = level.getString("3");
-                    String level4Text = level.getString("4");
-                    String level5Text = level.getString("5");
-                    String level6Text = level.getString("6");
-                    String level7Text = level.getString("7");
-                    String level8Text = level.getString("8");
-                    String level9Text = level.getString("9");
+        WordScriptInfo wordScriptInfo = new WordScriptInfo();
+        wordScriptInfo.setWord(wordAndVariations.get("word").toString());
+        wordScriptInfo.setWordid(Integer.valueOf(wordId));
 
-
-                    List<String> list = new ArrayList<>();
-                    list.addAll(Arrays.asList(level1Text.split(",")));
-                    list.addAll(Arrays.asList(level2Text.split(",")));
-                    list.addAll(Arrays.asList(level3Text.split(",")));
-                    list = list.stream().filter(StringUtils::isNotBlank).collect(Collectors.toList());
-                    List<ScriptInfo> scriptInfoList = new ArrayList<>();
-                    if(list.size()==0){
-                        wordScriptInfo.setScriptInfoList(scriptInfoList);
-                        return ServerResponse.createBySuccess(wordScriptInfo);
-                    }else{
-                        log.info("脚本列表："+list.toString());
-                        for (Listen listen : listenList) {
-                            log.info("已做完的脚本："+listen.getScriptId());
-                        }
-
-
-                        Integer count = 0;
-                        ScriptInfo scriptInfo = null;
-                        for (int i = 0; i < list.size(); i++) {
-                            boolean b = false;
-                            for (Listen listen : listenList) {
-                                if(listen.getScriptId().toString().equals(list.get(i))){
-                                    b = true;
-                                    break;
-                                }
-                            }
-                            if (!b) {
-                                scriptInfo = getScriptInfo(Integer.parseInt(list.get(i)));
-                                if (scriptInfo != null) {
-                                    scriptInfoList.add(scriptInfo);
-                                    count++;
-                                }
-                            }
-                            if(count==20){
-                                break;
-                            }
-                        }
-                        wordScriptInfo.setScriptInfoList(scriptInfoList);
-                    }
-
-
-//                    List<ScriptInfo> level1 = new ArrayList<>();
-//                    List<ScriptInfo> level2 = new ArrayList<>();
-//                    List<ScriptInfo> level3 = new ArrayList<>();
-//                    List<ScriptInfo> level4 = new ArrayList<>();
-//                    List<ScriptInfo> level5 = new ArrayList<>();
-//                    List<ScriptInfo> level6 = new ArrayList<>();
-//                    List<ScriptInfo> level7 = new ArrayList<>();
-//                    List<ScriptInfo> level8 = new ArrayList<>();
-//                    List<ScriptInfo> level9 = new ArrayList<>();
-//
-//
-//                    if (StringUtils.isNotEmpty(level1Text)) {
-//                        ScriptInfo scriptInfo = null;
-//                        for (String s : level1Text.split(",")) {
-//                            Integer levelScriptId = Integer.valueOf(s);
-//                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
-//                            if (!b) {
-//                                scriptInfo = getScriptInfo(levelScriptId);
-//                                if (scriptInfo != null) {
-//                                    level1.add(scriptInfo);
-//                                }
-//                            }
-//                        }
-//                    }
-//                    wordScriptInfo.setLevel1(level1);
-//
-//                    if (StringUtils.isNotEmpty(level2Text)) {
-//                        ScriptInfo scriptInfo = null;
-//                        for (String s : level2Text.split(",")) {
-//                            Integer levelScriptId = Integer.valueOf(s);
-//                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
-//                            if (!b) {
-//                                scriptInfo = getScriptInfo(levelScriptId);
-//                                if (scriptInfo != null) {
-//                                    level2.add(scriptInfo);
-//                                }
-//                            }
-//                        }
-//                    }
-//                    wordScriptInfo.setLevel2(level2);
-//
-//                    if (StringUtils.isNotEmpty(level3Text)) {
-//                        ScriptInfo scriptInfo = null;
-//                        for (String s : level3Text.split(",")) {
-//                            Integer levelScriptId = Integer.valueOf(s);
-//                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
-//                            if (!b) {
-//                                scriptInfo = getScriptInfo(levelScriptId);
-//                                if (scriptInfo != null) {
-//                                    level3.add(scriptInfo);
-//                                }
-//                            }
-//                        }
-//                    }
-//                    wordScriptInfo.setLevel3(level3);
-//
-//                    if (StringUtils.isNotEmpty(level4Text)) {
-//                        ScriptInfo scriptInfo = null;
-//                        for (String s : level4Text.split(",")) {
-//                            Integer levelScriptId = Integer.valueOf(s);
-//                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
-//                            if (!b) {
-//                                scriptInfo = getScriptInfo(levelScriptId);
-//                                if (scriptInfo != null) {
-//                                    level4.add(scriptInfo);
-//                                }
-//                            }
-//                        }
-//                    }
-//                    wordScriptInfo.setLevel4(level4);
-//
-//                    if (StringUtils.isNotEmpty(level5Text)) {
-//                        ScriptInfo scriptInfo = null;
-//                        for (String s : level5Text.split(",")) {
-//                            Integer levelScriptId = Integer.valueOf(s);
-//                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
-//                            if (!b) {
-//                                scriptInfo = getScriptInfo(levelScriptId);
-//                                if (scriptInfo != null) {
-//                                    level5.add(scriptInfo);
-//                                }
-//                            }
-//                        }
-//                    }
-//                    wordScriptInfo.setLevel5(level5);
-//
-//                    if (StringUtils.isNotEmpty(level6Text)) {
-//                        ScriptInfo scriptInfo = null;
-//                        for (String s : level6Text.split(",")) {
-//                            Integer levelScriptId = Integer.valueOf(s);
-//                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
-//                            if (!b) {
-//                                scriptInfo = getScriptInfo(levelScriptId);
-//                                if (scriptInfo != null) {
-//                                    level6.add(scriptInfo);
-//                                }
-//                            }
-//                        }
-//                    }
-//                    wordScriptInfo.setLevel6(level6);
-//                    if (StringUtils.isNotEmpty(level7Text)) {
-//                        ScriptInfo scriptInfo = null;
-//                        for (String s : level7Text.split(",")) {
-//                            Integer levelScriptId = Integer.valueOf(s);
-//                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
-//                            if (!b) {
-//                                scriptInfo = getScriptInfo(levelScriptId);
-//                                if (scriptInfo != null) {
-//                                    level7.add(scriptInfo);
-//                                }
-//                            }
-//                        }
-//                    }
-//                    wordScriptInfo.setLevel7(level7);
-//                    if (StringUtils.isNotEmpty(level8Text)) {
-//                        ScriptInfo scriptInfo = null;
-//                        for (String s : level8Text.split(",")) {
-//                            Integer levelScriptId = Integer.valueOf(s);
-//                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
-//                            if (!b) {
-//                                scriptInfo = getScriptInfo(levelScriptId);
-//                                if (scriptInfo != null) {
-//                                    level8.add(scriptInfo);
-//                                }
-//                            }
-//                        }
-//                    }
-//                    wordScriptInfo.setLevel8(level8);
-//                    if (StringUtils.isNotEmpty(level9Text)) {
-//                        ScriptInfo scriptInfo = null;
-//                        for (String s : level9Text.split(",")) {
-//                            Integer levelScriptId = Integer.valueOf(s);
-//                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
-//                            if (!b) {
-//                                scriptInfo = getScriptInfo(levelScriptId);
-//                                if (scriptInfo != null) {
-//                                    level9.add(scriptInfo);
-//                                }
-//                            }
-//                        }
-//                    }
-//                    wordScriptInfo.setLevel9(level9);
-
-                    return ServerResponse.createBySuccess(wordScriptInfo);
+        List<ScriptInfo> scriptInfoListByListen = new ArrayList<>();
+        int count = 0;
+        for (ScriptInfo scriptInfo : scriptInfoList) {
+            boolean has = listenList.stream().anyMatch(e -> scriptInfo.getScriptid().equals(e.getScriptId()));
+            if (!has) {
+                scriptInfo.setMp3("https://content.smartmicky.com/media/scriptid/"+scriptInfo.getScriptid()/100000+"/"+scriptInfo.getScriptid()+".mp3");
+                if(checkMP3Exist(levelScript+"\\"+scriptInfo.getScriptid()/100000+"\\"+scriptInfo.getScriptid()+".mp3")){
+                    scriptInfoListByListen.add(scriptInfo);
+                    count++;
                 }
             }
+            if(count==20){
+                break;
+            }
         }
-        return ServerResponse.createByError();
+        wordScriptInfo.setScriptInfoList(scriptInfoListByListen);
+        return ServerResponse.createBySuccess(wordScriptInfo);
+
+//
+//        File wordListenFile = new File(wordListen);
+//        File levelScriptFile = new File(levelScript);
+//        List<Listen> listenList = listenRepository.findByWordId(Integer.valueOf(wordId));
+//        if (wordListenFile.exists() && levelScriptFile.exists()) {
+//            for (File file : wordListenFile.listFiles()) {
+//                String name = file.getName().replace(".json", "");
+//                if (StringUtils.equals(name, wordId)) {
+//                    StringBuilder result = new StringBuilder();
+//                    BufferedReader br = null;//构造一个BufferedReader类来读取文件
+//                    try {
+//                        br = new BufferedReader(new InputStreamReader(new FileInputStream(file), encoding));
+//                        String s = null;
+//                        while ((s = br.readLine()) != null) {//使用readLine方法，一次读一行
+//                            result.append(System.lineSeparator() + s);
+//                        }
+//                        br.close();
+//                    } catch (FileNotFoundException e) {
+//                        e.printStackTrace();
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                    JSONObject wordListenJSON = JSONObject.parseObject(result.toString());
+//                    WordScriptInfo wordScriptInfo = new WordScriptInfo();
+//                    wordScriptInfo.setWord(wordListenJSON.getString("word"));
+//                    wordScriptInfo.setWordid(wordListenJSON.getInteger("wordid"));
+//                    wordScriptInfo.setSimilarsoundwords1(wordListenJSON.getString("similarsoundwords1"));
+//                    wordScriptInfo.setSimilarsoundwords1id(wordListenJSON.getString("similarsoundwords1id"));
+//                    wordScriptInfo.setSimilarsoundwords2(wordListenJSON.getString("similarsoundwords2"));
+//                    wordScriptInfo.setSimilarsoundwords2id(wordListenJSON.getString("similarsoundwords2id"));
+//                    wordScriptInfo.setSimilarlookwords1(wordListenJSON.getString("similarlookwords1"));
+//                    wordScriptInfo.setSimilarlookwords1id(wordListenJSON.getString("similarlookwords1id"));
+//                    wordScriptInfo.setSimilarlookwords2(wordListenJSON.getString("similarlookwords2"));
+//                    wordScriptInfo.setSimilarlookwords2id(wordListenJSON.getString("similarlookwords2id"));
+//                    JSONObject level = wordListenJSON.getJSONObject("level");
+//                    String level1Text = level.getString("1");
+//                    String level2Text = level.getString("2");
+//                    String level3Text = level.getString("3");
+//                    String level4Text = level.getString("4");
+//                    String level5Text = level.getString("5");
+//                    String level6Text = level.getString("6");
+//                    String level7Text = level.getString("7");
+//                    String level8Text = level.getString("8");
+//                    String level9Text = level.getString("9");
+//
+//
+//                    List<String> list = new ArrayList<>();
+//                    list.addAll(Arrays.asList(level1Text.split(",")));
+//                    list.addAll(Arrays.asList(level2Text.split(",")));
+//                    list.addAll(Arrays.asList(level3Text.split(",")));
+//                    list = list.stream().filter(StringUtils::isNotBlank).collect(Collectors.toList());
+//                    List<ScriptInfo> scriptInfoList = new ArrayList<>();
+//                    if(list.size()==0){
+//                        wordScriptInfo.setScriptInfoList(scriptInfoList);
+//                        return ServerResponse.createBySuccess(wordScriptInfo);
+//                    }else{
+//                        log.info("脚本列表："+list.toString());
+//                        for (Listen listen : listenList) {
+//                            log.info("已做完的脚本："+listen.getScriptId());
+//                        }
+//
+//
+//                        Integer count = 0;
+//                        ScriptInfo scriptInfo = null;
+//                        for (int i = 0; i < list.size(); i++) {
+//                            boolean b = false;
+//                            for (Listen listen : listenList) {
+//                                if(listen.getScriptId().toString().equals(list.get(i))){
+//                                    b = true;
+//                                    break;
+//                                }
+//                            }
+//                            if (!b) {
+//                                scriptInfo = getScriptInfo(Integer.parseInt(list.get(i)));
+//                                if (scriptInfo != null) {
+//                                    scriptInfoList.add(scriptInfo);
+//                                    count++;
+//                                }
+//                            }
+//                            if(count==20){
+//                                break;
+//                            }
+//                        }
+//                        wordScriptInfo.setScriptInfoList(scriptInfoList);
+//                    }
+//
+//
+////                    List<ScriptInfo> level1 = new ArrayList<>();
+////                    List<ScriptInfo> level2 = new ArrayList<>();
+////                    List<ScriptInfo> level3 = new ArrayList<>();
+////                    List<ScriptInfo> level4 = new ArrayList<>();
+////                    List<ScriptInfo> level5 = new ArrayList<>();
+////                    List<ScriptInfo> level6 = new ArrayList<>();
+////                    List<ScriptInfo> level7 = new ArrayList<>();
+////                    List<ScriptInfo> level8 = new ArrayList<>();
+////                    List<ScriptInfo> level9 = new ArrayList<>();
+////
+////
+////                    if (StringUtils.isNotEmpty(level1Text)) {
+////                        ScriptInfo scriptInfo = null;
+////                        for (String s : level1Text.split(",")) {
+////                            Integer levelScriptId = Integer.valueOf(s);
+////                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
+////                            if (!b) {
+////                                scriptInfo = getScriptInfo(levelScriptId);
+////                                if (scriptInfo != null) {
+////                                    level1.add(scriptInfo);
+////                                }
+////                            }
+////                        }
+////                    }
+////                    wordScriptInfo.setLevel1(level1);
+////
+////                    if (StringUtils.isNotEmpty(level2Text)) {
+////                        ScriptInfo scriptInfo = null;
+////                        for (String s : level2Text.split(",")) {
+////                            Integer levelScriptId = Integer.valueOf(s);
+////                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
+////                            if (!b) {
+////                                scriptInfo = getScriptInfo(levelScriptId);
+////                                if (scriptInfo != null) {
+////                                    level2.add(scriptInfo);
+////                                }
+////                            }
+////                        }
+////                    }
+////                    wordScriptInfo.setLevel2(level2);
+////
+////                    if (StringUtils.isNotEmpty(level3Text)) {
+////                        ScriptInfo scriptInfo = null;
+////                        for (String s : level3Text.split(",")) {
+////                            Integer levelScriptId = Integer.valueOf(s);
+////                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
+////                            if (!b) {
+////                                scriptInfo = getScriptInfo(levelScriptId);
+////                                if (scriptInfo != null) {
+////                                    level3.add(scriptInfo);
+////                                }
+////                            }
+////                        }
+////                    }
+////                    wordScriptInfo.setLevel3(level3);
+////
+////                    if (StringUtils.isNotEmpty(level4Text)) {
+////                        ScriptInfo scriptInfo = null;
+////                        for (String s : level4Text.split(",")) {
+////                            Integer levelScriptId = Integer.valueOf(s);
+////                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
+////                            if (!b) {
+////                                scriptInfo = getScriptInfo(levelScriptId);
+////                                if (scriptInfo != null) {
+////                                    level4.add(scriptInfo);
+////                                }
+////                            }
+////                        }
+////                    }
+////                    wordScriptInfo.setLevel4(level4);
+////
+////                    if (StringUtils.isNotEmpty(level5Text)) {
+////                        ScriptInfo scriptInfo = null;
+////                        for (String s : level5Text.split(",")) {
+////                            Integer levelScriptId = Integer.valueOf(s);
+////                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
+////                            if (!b) {
+////                                scriptInfo = getScriptInfo(levelScriptId);
+////                                if (scriptInfo != null) {
+////                                    level5.add(scriptInfo);
+////                                }
+////                            }
+////                        }
+////                    }
+////                    wordScriptInfo.setLevel5(level5);
+////
+////                    if (StringUtils.isNotEmpty(level6Text)) {
+////                        ScriptInfo scriptInfo = null;
+////                        for (String s : level6Text.split(",")) {
+////                            Integer levelScriptId = Integer.valueOf(s);
+////                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
+////                            if (!b) {
+////                                scriptInfo = getScriptInfo(levelScriptId);
+////                                if (scriptInfo != null) {
+////                                    level6.add(scriptInfo);
+////                                }
+////                            }
+////                        }
+////                    }
+////                    wordScriptInfo.setLevel6(level6);
+////                    if (StringUtils.isNotEmpty(level7Text)) {
+////                        ScriptInfo scriptInfo = null;
+////                        for (String s : level7Text.split(",")) {
+////                            Integer levelScriptId = Integer.valueOf(s);
+////                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
+////                            if (!b) {
+////                                scriptInfo = getScriptInfo(levelScriptId);
+////                                if (scriptInfo != null) {
+////                                    level7.add(scriptInfo);
+////                                }
+////                            }
+////                        }
+////                    }
+////                    wordScriptInfo.setLevel7(level7);
+////                    if (StringUtils.isNotEmpty(level8Text)) {
+////                        ScriptInfo scriptInfo = null;
+////                        for (String s : level8Text.split(",")) {
+////                            Integer levelScriptId = Integer.valueOf(s);
+////                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
+////                            if (!b) {
+////                                scriptInfo = getScriptInfo(levelScriptId);
+////                                if (scriptInfo != null) {
+////                                    level8.add(scriptInfo);
+////                                }
+////                            }
+////                        }
+////                    }
+////                    wordScriptInfo.setLevel8(level8);
+////                    if (StringUtils.isNotEmpty(level9Text)) {
+////                        ScriptInfo scriptInfo = null;
+////                        for (String s : level9Text.split(",")) {
+////                            Integer levelScriptId = Integer.valueOf(s);
+////                            boolean b = listenList.stream().anyMatch(e -> e.getScriptId().equals(levelScriptId));
+////                            if (!b) {
+////                                scriptInfo = getScriptInfo(levelScriptId);
+////                                if (scriptInfo != null) {
+////                                    level9.add(scriptInfo);
+////                                }
+////                            }
+////                        }
+////                    }
+////                    wordScriptInfo.setLevel9(level9);
+//
+//                    return ServerResponse.createBySuccess(wordScriptInfo);
+//                }
+//            }
+//        }
+//        return ServerResponse.createByError();
     }
 
     @Override
@@ -840,6 +878,11 @@ public class IndexServiceImpl implements IndexService {
 
     }
 
+    @Override
+    public ServerResponse getDailyListenCount(String time) {
+        return ServerResponse.createBySuccess(objectArrayList2Map2(issueRepository.getDailyListenCount(time)));
+    }
+
 
     ScriptInfo getScriptInfo(Integer id) {
         File jsonFile = new File(levelScript + File.separator + (id / 100000) + File.separator + id + ".json");
@@ -918,5 +961,22 @@ public class IndexServiceImpl implements IndexService {
         map.put("胡小兰", Arrays.asList("n", "o"));
         map.put("章士骏", Arrays.asList("h", "i"));
         map.put("王浩晨", Arrays.asList("s"));
+    }
+
+    private Map<String,Integer> objectArrayList2Map2(List<Object[]> objects){
+        if(objects==null){
+            return null;
+        }
+        Map<String,Integer> map = new HashMap<>();
+        for (Object[] object : objects) {
+            map.put(String.valueOf(object[0]),Integer.valueOf(String.valueOf(object[1])));
+        }
+        return map;
+    }
+
+
+    boolean checkMP3Exist(String fileName){
+        File file = new File(fileName);
+        return file.exists();
     }
 }
