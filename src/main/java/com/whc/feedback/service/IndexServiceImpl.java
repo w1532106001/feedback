@@ -439,7 +439,8 @@ public class IndexServiceImpl implements IndexService {
             boolean has = listenList.stream().anyMatch(e -> scriptInfo.getScriptid().equals(e.getScriptId()));
             if (!has) {
                 scriptInfo.setMp3("https://content.smartmicky.com/media/scriptid/"+scriptInfo.getScriptid()/100000+"/"+scriptInfo.getScriptid()+".mp3");
-                if(checkMP3Exist(levelScript+"\\"+scriptInfo.getScriptid()/100000+"\\"+scriptInfo.getScriptid()+".mp3")){
+                if(checkMP3Exist(levelScript+"\\"+scriptInfo.getScriptid()/100000+"\\"+scriptInfo.getScriptid()+".mp3")&&
+                        checkMP3Exist(levelScript+"\\"+scriptInfo.getScriptid()/100000+"\\"+scriptInfo.getScriptid()+".json")){
                     scriptInfoListByListen.add(scriptInfo);
                     count++;
                 }
