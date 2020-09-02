@@ -36,23 +36,23 @@ class FeedbackApplicationTests {
      */
     @Test
     void test() {
-        Map wordAndVariations = issueRepository.getWordAndVariations("9783");
+        Map wordAndVariations = issueRepository.getWordAndVariations("22804");
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("'''");
         stringBuilder.append(wordAndVariations.get("word"));
         stringBuilder.append("''");
         String[] variations = wordAndVariations.get("variations").toString().split(" ");
         for (String variation : variations) {
-            stringBuilder.append(" or ''" + variation + "''");
+            stringBuilder.append(" or ''" + variation.replaceAll(",","") + "''");
         }
         List<Map<String, Object>> objects = issueRepository.getScriptListByWordAndVariations(wordAndVariations.get("word").toString(), stringBuilder.toString());
         System.out.println(objects);
         System.out.println(stringBuilder);
         List<ScriptInfo> scriptInfoList = JSONObject.parseArray(JSONObject.toJSONString(objects), ScriptInfo.class);
-        List<Listen> listenList = listenRepository.findByWordId(9783);
+        List<Listen> listenList = listenRepository.findByWordId(22212);
         WordScriptInfo wordScriptInfo = new WordScriptInfo();
-        wordScriptInfo.setWord("dry");
-        wordScriptInfo.setWordid(9783);
+        wordScriptInfo.setWord(wordAndVariations.get("word").toString());
+        wordScriptInfo.setWordid(22212);
 
         List<ScriptInfo> scriptInfoListByListen = new ArrayList<>();
         int count = 0;

@@ -422,7 +422,7 @@ public class IndexServiceImpl implements IndexService {
         stringBuilder.append("''");
         String[] variations = wordAndVariations.get("variations").toString().split(" ");
         for (String variation : variations) {
-            stringBuilder.append(" or ''").append(variation).append("''");
+            stringBuilder.append(" or ''" + variation.replaceAll(",","") + "''");
         }
         List<Map<String, Object>> objects = issueRepository.getScriptListByWordAndVariations(wordAndVariations.get("word").toString(), stringBuilder.toString());
         System.out.println(objects);
