@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -40,9 +41,10 @@ class FeedbackApplicationTests {
      * 转换List<Object[]>到List<Map>
      */
     @Test
+    @Transactional
     void test() {
         List<ScriptWord> scriptWordList = scriptWordRepository.findAll();
-        scriptWordList.parallelStream().filter(scriptWord -> scriptWord.getWordName().equals("good")).forEach(scriptWord ->
+        scriptWordList.stream().forEach(scriptWord ->
                 {
                     Map wordAndVariations = issueRepository.getWordAndVariations(scriptWord.getWordId());
                     StringBuilder stringBuilder = new StringBuilder();
@@ -54,11 +56,11 @@ class FeedbackApplicationTests {
                         stringBuilder.append(" or ''" + variation.replaceAll(",","") + "''");
                     }
                     List<Map<String, Object>> objects = issueRepository.getScriptListByWordAndVariations(wordAndVariations.get("word").toString(), stringBuilder.toString());
-                    List<ScriptInfo> scriptInfoList = JSONObject.parseArray(JSONObject.toJSONString(objects), ScriptInfo.class);
-                    List<Listen> listenList = listenRepository.findByWordId(Integer.parseInt(scriptWord.getWordId()));
-                    scriptWord.setScriptCount(Long.parseLong(String.valueOf(listenList.size())));
-                    scriptWord.setScriptTotal(scriptInfoList.size());
-                    System.out.println(scriptWord);
+//                    List<ScriptInfo> scriptInfoList = JSONObject.parseArray(JSONObject.toJSONString(objects), ScriptInfo.class);
+                    if(objects.size()==0&&scriptWord.getStatus()==0){
+//                        scriptWordRepository.updateScriptWord(scriptWord.getWordId());
+                        System.out.println(scriptWord.getWordId()+",");
+                    }
                 }
                 );
 

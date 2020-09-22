@@ -21,6 +21,8 @@ public class ScriptWord {
     private String wordId;
     @Column(name = "word_name")
     private String wordName;
+    @Column(name = "status")
+    private Integer status;
     @Transient
     private Integer sort;
     @Transient
