@@ -383,7 +383,7 @@ public class IndexServiceImpl implements IndexService {
         stringBuilder.append("''");
         String[] variations = wordAndVariations.get("variations").toString().split(" ");
         for (String variation : variations) {
-            stringBuilder.append(" or ''" + variation.replaceAll(",","") + "''");
+            stringBuilder.append(" or ''" + variation.replaceAll(",", "") + "''");
         }
         List<Map<String, Object>> objects = issueRepository.getScriptListByWordAndVariations(wordAndVariations.get("word").toString(), stringBuilder.toString());
         List<ScriptInfo> scriptInfoList = JSONObject.parseArray(JSONObject.toJSONString(objects), ScriptInfo.class);
@@ -394,22 +394,22 @@ public class IndexServiceImpl implements IndexService {
 
         List<ScriptInfo> scriptInfoListByListen = new ArrayList<>();
         int count = 0;
-        if(scriptInfoList.size()>0){
-            for (ScriptInfo scriptInfo : scriptInfoList) {
-                boolean has = listenList.stream().anyMatch(e -> scriptInfo.getScriptid().equals(e.getScriptId()));
-                if (!has) {
-                    scriptInfo.setMp3("https://content.smartmicky.com/media/scriptid/"+scriptInfo.getScriptid()/100000+"/"+scriptInfo.getScriptid()+".mp3");
-                    if(checkMP3Exist(levelScript+"\\"+scriptInfo.getScriptid()/100000+"\\"+scriptInfo.getScriptid()+".mp3")&&
-                            checkMP3Exist(levelScript+"\\"+scriptInfo.getScriptid()/100000+"\\"+scriptInfo.getScriptid()+".json")){
-                        scriptInfoListByListen.add(scriptInfo);
-                        count++;
-                    }
-                }
-                if(count==20){
-                    break;
+        for (ScriptInfo scriptInfo : scriptInfoList) {
+            boolean has = listenList.stream().anyMatch(e -> scriptInfo.getScriptid().equals(e.getScriptId()));
+            if (!has) {
+                scriptInfo.setMp3("https://content.smartmicky.com/media/scriptid/" + scriptInfo.getScriptid() / 100000 + "/" + scriptInfo.getScriptid() + ".mp3");
+                if (checkMP3Exist(levelScript + "\\" + scriptInfo.getScriptid() / 100000 + "\\" + scriptInfo.getScriptid() + ".mp3") &&
+                        checkMP3Exist(levelScript + "\\" + scriptInfo.getScriptid() / 100000 + "\\" + scriptInfo.getScriptid() + ".json")) {
+                    scriptInfoListByListen.add(scriptInfo);
+                    count++;
                 }
             }
-        }else{
+            if (count == 20) {
+                break;
+            }
+        }
+
+        if (scriptInfoListByListen.size() == 0) {
             scriptWordRepository.updateScriptWord(wordId);
         }
         wordScriptInfo.setScriptInfoList(scriptInfoListByListen);
@@ -426,7 +426,7 @@ public class IndexServiceImpl implements IndexService {
         if (scriptId == null || scriptStatus == null || userId == null) {
             return ServerResponse.createByErrorMessage("数据异常");
         }
-        Listen listen = listenRepository.findByScriptIdAndWordId(scriptId,wordId);
+        Listen listen = listenRepository.findByScriptIdAndWordId(scriptId, wordId);
         Listen result = null;
         if (null == listen) {
             listen = new Listen();
@@ -691,19 +691,19 @@ public class IndexServiceImpl implements IndexService {
         map.put("王浩晨", Arrays.asList("s"));
     }
 
-    private Map<String,Integer> objectArrayList2Map2(List<Object[]> objects){
-        if(objects==null){
+    private Map<String, Integer> objectArrayList2Map2(List<Object[]> objects) {
+        if (objects == null) {
             return null;
         }
-        Map<String,Integer> map = new HashMap<>();
+        Map<String, Integer> map = new HashMap<>();
         for (Object[] object : objects) {
-            map.put(String.valueOf(object[0]),Integer.valueOf(String.valueOf(object[1])));
+            map.put(String.valueOf(object[0]), Integer.valueOf(String.valueOf(object[1])));
         }
         return map;
     }
 
 
-    boolean checkMP3Exist(String fileName){
+    boolean checkMP3Exist(String fileName) {
         File file = new File(fileName);
         return file.exists();
     }

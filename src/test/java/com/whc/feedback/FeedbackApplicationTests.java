@@ -44,7 +44,7 @@ class FeedbackApplicationTests {
     @Transactional
     void test() {
         List<ScriptWord> scriptWordList = scriptWordRepository.findAll();
-        scriptWordList.stream().forEach(scriptWord ->
+        scriptWordList.stream().filter(scriptWord -> scriptWord.getWordName().equals("ability")).forEach(scriptWord ->
                 {
                     Map wordAndVariations = issueRepository.getWordAndVariations(scriptWord.getWordId());
                     StringBuilder stringBuilder = new StringBuilder();
@@ -56,7 +56,7 @@ class FeedbackApplicationTests {
                         stringBuilder.append(" or ''" + variation.replaceAll(",","") + "''");
                     }
                     List<Map<String, Object>> objects = issueRepository.getScriptListByWordAndVariations(wordAndVariations.get("word").toString(), stringBuilder.toString());
-//                    List<ScriptInfo> scriptInfoList = JSONObject.parseArray(JSONObject.toJSONString(objects), ScriptInfo.class);
+                    List<ScriptInfo> scriptInfoList = JSONObject.parseArray(JSONObject.toJSONString(objects), ScriptInfo.class);
                     if(objects.size()==0&&scriptWord.getStatus()==0){
 //                        scriptWordRepository.updateScriptWord(scriptWord.getWordId());
                         System.out.println(scriptWord.getWordId()+",");
@@ -67,6 +67,7 @@ class FeedbackApplicationTests {
 
 
     }
+
 
     private Map<String, Integer> objectArrayList2Map(List<Object[]> objects) {
         if (objects == null) {
