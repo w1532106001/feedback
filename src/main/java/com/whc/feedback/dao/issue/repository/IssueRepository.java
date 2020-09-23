@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -27,14 +28,17 @@ public interface IssueRepository extends JpaRepository<Issue, Integer>, JpaSpeci
 
     Issue findIssueById(Integer id);
 
+    @Transactional
     @Modifying
     @Query(value = "update Issue set status = ?2 where id= ?1")
     Integer updateStatusById(Integer id, Byte status);
 
+    @Transactional
     @Modifying
     @Query(value = "update Issue set status = ?2 , closeDate = ?3  where id= ?1")
     Integer updateStatusAndCloseDateById(Integer id, Byte status, Date date);
 
+    @Transactional
     @Modifying
     @Query(value = "update Issue set status = ?2 , assignmentDate = ?3 , handlerId = ?4  where id= ?1")
     Integer updateStatusAndHandlerIdAndAssignmentDateById(Integer id, Byte status, Date date, Integer userId);
@@ -42,6 +46,7 @@ public interface IssueRepository extends JpaRepository<Issue, Integer>, JpaSpeci
     @Query(value = "select count(id) from Issue where status = 1 and handlerId = ?1")
     int getNumByStatusAndHandlerId(Integer handlerId);
 
+    @Transactional
     @Modifying
     @Query(value = "update Issue set isTemporarilyUnableToProcess = ?2  where id= ?1")
     Integer isTemporarilyUnableToProcess(Integer id, Boolean isTemporarilyUnableToProcess);
