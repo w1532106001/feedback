@@ -44,17 +44,21 @@ class FeedbackApplicationTests {
     @Transactional
     void test() {
         List<ScriptWord> scriptWordList = scriptWordRepository.findAll();
-        scriptWordList.stream().filter(scriptWord -> scriptWord.getWordName().equals("ability")).forEach(scriptWord ->
+        scriptWordList.stream().filter(scriptWord -> scriptWord.getWordName().equals("farmland")).forEach(scriptWord ->
                 {
                     Map wordAndVariations = issueRepository.getWordAndVariations(scriptWord.getWordId());
                     StringBuilder stringBuilder = new StringBuilder();
                     stringBuilder.append("'''");
                     stringBuilder.append(wordAndVariations.get("word"));
                     stringBuilder.append("''");
-                    String[] variations = wordAndVariations.get("variations").toString().split(" ");
-                    for (String variation : variations) {
-                        stringBuilder.append(" or ''" + variation.replaceAll(",","") + "''");
+                    String variations = (String) wordAndVariations.get("variations");
+                    if(StringUtils.isNotBlank(variations)){
+                        String[] variationsArray = wordAndVariations.get("variations").toString().split(" ");
+                        for (String variation : variationsArray) {
+                            stringBuilder.append(" or ''" + variation.replaceAll(",","") + "''");
+                        }
                     }
+
                     List<Map<String, Object>> objects = issueRepository.getScriptListByWordAndVariations(wordAndVariations.get("word").toString(), stringBuilder.toString());
                     List<ScriptInfo> scriptInfoList = JSONObject.parseArray(JSONObject.toJSONString(objects), ScriptInfo.class);
                     if(objects.size()==0&&scriptWord.getStatus()==0){
